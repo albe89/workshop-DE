@@ -8,14 +8,14 @@ terraform {
 }
 
 provider "google" {
-  credentials = "/Users/alberto/keyGPA.json"
-  project     = "voltaic-talent-485417-p2"
-  region      = "us-central1"
+  credentials = file(var.credentials)
+  project     = var.project
+  region      = var.region
 }
 
 resource "google_storage_bucket" "demo-bucket-de-workshop" {
-  name          = "demo-bucket-de-workshop-123456"
-  location      = "US"
+  name          = var.gsc_bucket_name
+  location      = var.location
   force_destroy = true
 
   lifecycle_rule {
@@ -26,4 +26,9 @@ resource "google_storage_bucket" "demo-bucket-de-workshop" {
       type = "AbortIncompleteMultipartUpload"
     }
   }
+}
+
+resource "google_bigquery_dataset" "demo_dataset" {
+  dataset_id = var.bq_data_set_name
+  location   = var.location
 }
