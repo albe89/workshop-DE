@@ -46,33 +46,49 @@ parse_dates = [
 @click.option('--pg-port', default=5432, type=int, help='PostgreSQL port')
 @click.option('--pg-db', default='ny_taxi', help='PostgreSQL database name')
 @click.option('--target-table', default='yellow_taxi_data', help='Target table name')
-def run(pg_user, pg_pass, pg_host, pg_port, pg_db, target_table):
+@click.option('--csv', type=click.Path(exists=True), default=None, help='Path to local CSV file (if not provided, downloads from URL)')
+def run(pg_user, pg_pass, pg_host, pg_port, pg_db, target_table, csv):
     year = 2021
     month = 1
     chunksize = 100000
-    url = f'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_{year:04d}-{month:02d}.csv.gz'
     
-    # Check if URL is accessible
-    try:
-        urllib.request.urlopen(urllib.request.Request(url, method='HEAD'))
-        click.echo(f"✓ URL is accessible: {url}")
-    except urllib.error.HTTPError as e:
-        click.echo(f"✗ Error accessing URL: HTTP {e.code}", err=True)
-        click.echo(f"  URL: {url}", err=True)
-        raise click.Abort()
-    except Exception as e:
-        click.echo(f"✗ Error checking URL: {e}", err=True)
-        raise click.Abort()
+    # Use local CSV if provided, otherwise download from URL
+    if csv:
+        url = csv
+        click.echo(f"✓ Using local CSV file: {url}")
+    else:
+        url = f'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_{year:04d}-{month:02d}.csv.gz'
+        # Check if URL is accessible
+        try:
+            urllib.request.urlopen(urllib.request.Request(url, method='HEAD'))
+            click.echo(f"✓ URL is accessible: {url}")
+        except urllib.error.HTTPError as e:
+            click.echo(f"✗ Error accessing URL: HTTP {e.code}", err=True)
+            click.echo(f"  URL: {url}", err=True)
+            raise click.Abort()
+        except Exception as e:
+            click.echo(f"✗ Error checking URL: {e}", err=True)
+            raise click.Abort()
 
     engine = create_engine(f'postgresql://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}')
 
-    df_iter = pd.read_csv(
-        url,
-        dtype=dtype,
-        parse_dates=parse_dates,
-        iterator=True,
-        chunksize=chunksize
-    )
+    # Use different settings for local CSV vs remote URL
+    if csv:
+        # For local CSV, use generic settings
+        df_iter = pd.read_csv(
+            url,
+            iterator=True,
+            chunksize=chunksize
+        )
+    else:
+        # For remote URL (yellow taxi data), use specific settings
+        df_iter = pd.read_csv(
+            url,
+            dtype=dtype,
+            parse_dates=parse_dates,
+            iterator=True,
+            chunksize=chunksize
+        )
 
     first = True
 
