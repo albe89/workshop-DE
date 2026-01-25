@@ -208,3 +208,8 @@ __marimo__/
 
 *.parquet
 ny_taxi_postgres_data/*
+
+#terraform
+*.tfstate
+*.tfstate.backup
+.terraform*
