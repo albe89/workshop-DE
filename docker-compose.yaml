@@ -71,6 +71,11 @@ services:
             tmpDir:
               path: /tmp/kestra-wd/tmp
           url: http://localhost:8080/
+          ai:
+            type: gemini
+            gemini:
+              model-name: gemini-2.5-flash
+              api-key: ${GEMINI_API_KEY}
     ports:
       - "8080:8080"
       - "8081:8081"
@@ -100,13 +105,17 @@ services:
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_postgres:5432/airflow
-      AIRFLOW__CORE__FERNET_KEY: "CHANGE_ME_FERNET_KEY"
+      AIRFLOW__CORE__FERNET_KEY: "y328BWL0yVIHQzsvo0UakQSQqcDZJ4AQkF512TAhI6A=%"
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+      _PIP_ADDITIONAL_REQUIREMENTS: -r /requirements.txt 
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
+      - ./airflow/data:/opt/airflow/data
+      - ./airflow/requirements.txt:/requirements.txt 
+
     ports:
       - "8088:8080"
     command: webserver
@@ -119,12 +128,15 @@ services:
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_postgres:5432/airflow
-      AIRFLOW__CORE__FERNET_KEY: "CHANGE_ME_FERNET_KEY"
+      AIRFLOW__CORE__FERNET_KEY: "y328BWL0yVIHQzsvo0UakQSQqcDZJ4AQkF512TAhI6A=%"
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      _PIP_ADDITIONAL_REQUIREMENTS: -r /requirements.txt 
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
+      - ./airflow/data:/opt/airflow/data
+      - ./airflow/requirements.txt:/requirements.txt 
     command: scheduler
 
   airflow-init:
@@ -134,7 +146,7 @@ services:
         condition: service_healthy
     environment:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_postgres:5432/airflow
-      AIRFLOW__CORE__FERNET_KEY: "CHANGE_ME_FERNET_KEY"
+      AIRFLOW__CORE__FERNET_KEY: "y328BWL0yVIHQzsvo0UakQSQqcDZJ4AQkF512TAhI6A=%"
     command: >
       bash -c "
       airflow db migrate &&
